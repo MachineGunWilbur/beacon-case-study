@@ -2,15 +2,16 @@
 
 ## 1. Recommendation
 
-Quote Beacon 9× H100 at \$3.60/GPU-hour, or \$32.40/hour total.
+Quote Beacon 9× H100 at $3.60/GPU-hour, or $32.40/hour total.
 
-At Beacon's current 360B tokens/month, that is approximately \$0.0648 per
-million tokens. My sizing estimate puts stock vLLM at ~12 H100s at Beacon's
-2× peak. Because Tessera commits in 8-GPU nodes, its smallest configuration
-that clears that requirement is 16 H100s at \$47.20/hour, or \$0.0944 per
-million tokens.
+My model estimates that stock vLLM needs ~12 H100s to serve Beacon's 2× peak
+while meeting its latency SLA. Because Tessera sells in 8-GPU node increments,
+the smallest Tessera commitment above that requirement is 16 H100s at
+$47.20/hour.
 
-That makes the proposed configuration approximately 31% cheaper per token.
+At Beacon's current 360B tokens/month, the proposed 9-GPU configuration costs
+approximately $0.0648 per million tokens versus $0.0944 per million tokens for
+Tessera's 16-GPU tier, about 31% lower.
 
 ## 2. The Case
 
@@ -21,14 +22,16 @@ analysis by token volume.
 On one H100 running stock vLLM and Qwen3-8B, I measured three representative
 workloads. Cold-prefix chat sustained roughly 15.5k logical tokens/s near the
 SLA boundary. Analysis traffic sustained ~12.4k tokens/s at 0.7 RPS while
-meeting the SLA. Chat with strong prefix reuse was dramatically cheaper:
+meeting the SLA. Chat with strong prefix reuse sustained much higher throughput:
 a 12 RPS offered load produced ~46.6k logical tokens/s while remaining well
 inside the SLA.
 
-Using Beacon's reported 71% cache-hit rate as an explicit approximation between
-my cold- and warm-chat measurements gives ~24.2k Beacon-shaped logical
-tokens/s/GPU for stock vLLM. At the 2× peak that implies ~11.46 GPUs, rounded
-to 12.
+For sizing, I use Beacon's reported 71% cache-hit rate as a coarse proxy for
+where production chat lies between my measured cold- and warm-prefix cases.
+This is not a measured production throughput number; it is an explicit modeling
+assumption. Under that approximation, I estimate ~24.2k logical tokens/s/GPU
+for the mixed Beacon workload on stock vLLM. At the 2× peak, that implies
+~11.46 GPUs, rounded to 12.
 
 Applying the proposed stack's 1.45× tokens/GPU-hour claim gives a theoretical
 requirement of 7.91 GPUs. I would not quote 8: it requires at least a 1.433×
@@ -61,6 +64,9 @@ Representative results:
 | Chat, warm prefix | 12 RPS | 10.28 RPS | 46,627 | 79 ms | 17.3 ms | Pass |
 | Analysis | 0.7 RPS | 0.65 RPS | 12,433 | 1,367 ms | 21.3 ms | Pass |
 | Analysis saturation | unlimited | 0.92 RPS | 17,591 | 32,896 ms | 265.7 ms | Fail |
+
+"Logical tok/s" counts the full request token volume reported by the benchmark,
+including cached prefix tokens; it should not be read as fresh prefill compute.
 
 Full traffic analysis, calculations, assumptions, and intermediate benchmark
 results are in `analysis.ipynb`.
