@@ -1,5 +1,56 @@
 # Benchmark Results
 
+## Benchmark commands
+
+Server:
+
+```bash
+vllm serve Qwen/Qwen3-8B \
+  --max-model-len 32768
+
+## Cold chat example
+
+vllm bench serve \
+  --backend openai \
+  --model Qwen/Qwen3-8B \
+  --dataset-name random \
+  --random-input-len 4334 \
+  --random-output-len 203 \
+  --random-range-ratio 0 \
+  --num-prompts 100 \
+  --request-rate 3.7 \
+  --metric-percentiles 95
+
+##warm-prefix chat example:
+
+vllm bench serve \
+  --backend openai \
+  --model Qwen/Qwen3-8B \
+  --dataset-name prefix_repetition \
+  --prefix-repetition-num-prefixes 40 \
+  --prefix-repetition-prefix-len 4210 \
+  --prefix-repetition-suffix-len 124 \
+  --prefix-repetition-output-len 203 \
+  --num-prompts 160 \
+  --request-rate 12 \
+  --metric-percentiles 95 \
+  --ignore-eos
+
+## analysis example
+
+vllm bench serve \
+  --backend openai \
+  --model Qwen/Qwen3-8B \
+  --dataset-name random \
+  --random-input-len 18712 \
+  --random-output-len 372 \
+  --random-range-ratio 0 \
+  --num-prompts 40 \
+  --request-rate 0.7 \
+  --metric-percentiles 95 \
+  --ignore-eos
+
+  
 ## Environment
 
 - Provider: RunPod
